@@ -1,0 +1,36 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f0f0f0;
+}
+
+main {
+  text-align: center;
+}
+
+.date-box {
+  background-color: #d3d3d3;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  display: inline-block;
+}
+
+.turn-box {
+  background-color: #87cefa;
+  color: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  display: inline-block;
+}
+
+.no-class-box {
+  background-color: #d3d3d3;
+  padding: 20px;
+  border-radius: 10px;
+  display: inline-block;
+}
