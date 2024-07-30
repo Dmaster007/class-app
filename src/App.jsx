@@ -18,7 +18,7 @@ export default function App() {
 
   const getdata = async () => {
     try {
-        const response = await fetch('http://localhost:3000/data');
+        const response = await fetch('http://localhost:3000/api/v1/user');
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
