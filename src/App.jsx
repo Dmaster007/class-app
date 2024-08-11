@@ -1,52 +1,78 @@
 import { useEffect, useState } from "react";
 import "./App.css";
+import LoginButton from "./components/loginButton";
+import { useAuth0 } from "@auth0/auth0-react";
+import LogoutButton from "./components/logoutButton";
 
 export default function App() {
   const [turn, setTurn] = useState("");
-
+  const { user, isAuthenticated, isLoading } = useAuth0();
+  const [isLoggedIn , setLog]  = useState(false);
+  const [users, setUsers] = useState([]);
+  const [lastAttendedClass, setLastAttendedClass] = useState(null);
   const people = ["Yash", "Deshmukh", "Durgesh"];
 
-  const date = new Date();
-  const day = date.getDay();
-
-  // Function to calculate the week number
-  const getWeekNumber = (d) => {
-    const start = new Date(d.getFullYear(), 0, 1);
-    const diff = Math.floor((d - start) / (1000 * 60 * 60 * 24));
-    return Math.ceil((diff + start.getDay() + 1) / 7);
+  const getUserData = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/v1/user');
+      const data = await response.json();
+      setUsers(data.users);
+      setLastAttendedClass(data.lastAttendedClass);
+      determineTurn(data.lastAttendedClass);
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
   };
 
-  const getdata = async () => {
+  const determineTurn = (lastClass) => {
+    const today = new Date().getDay();
+    const index = (lastClass + 1) % people.length;
+    setTurn(people[index]);
+  };
+
+  const markAttendance = async () => {
     try {
-        const response = await fetch('http://localhost:3000/api/v1/user');
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log(data);
+      const response = await fetch('http://localhost:3000/api/v1/attend', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username: turn.toLowerCase() }),
+      });
+      const data = await response.json();
+      setUsers(data.users);
+      setLastAttendedClass(data.lastAttendedClass);
     } catch (error) {
-        console.error('Error fetching data:', error);
+      console.error('Error marking attendance:', error);
     }
-};
-
+  };
+  const day =  new Date().getDay()
   useEffect(() => {
-    if (day === 1 || day === 5) { // Monday or Friday
-      const weekNumber = getWeekNumber(date);
-      const index = (weekNumber - 1) % people.length;
-      setTurn(people[index]);
-    }
-
     
-  }, [day, date, people]);
+    getUserData();
+    if(user){
+      setLog(true)
+    } 
+  }, [user]);
 
   return (
     <main>
-      <div className="date-box"><span>Today is: {date.toDateString()}</span></div>
-      {turn && <div className="turn-box">It's {turn}'s turn to go to class!</div>}
-      {!turn && <div className="no-class-box">There is no chaos class today, enjoy!</div>}
-      <button onClick={getdata}>getdata</button>
+      <div className="date-box"><span>Today is: {new Date().toDateString()}</span></div>
+      {turn && (day === 1 || day === 4) &&<div className="turn-box">It's {turn}'s turn to go to class!</div>}
+      {!(day === 1 || day === 4) && <div className="no-class-box">There is no chaos class today, enjoy!</div>}
+      {isLoggedIn && (new Date().getDay() === 1 || new Date().getDay() === 4) && (
+        <button onClick={markAttendance}>Mark Attendance</button>
+      )}
+      <div>
+        <h3>Attendance Record:</h3>
+        <ul>
+          {users.map((user, index) => (
+            <li key={index}>{user.username}: {user.classAttended} classes attended</li>
+          ))}
+        </ul>
+      </div>
+      {!isLoggedIn && <LoginButton />}
+      {isLoggedIn && <LogoutButton />}
     </main>
   );
 }
